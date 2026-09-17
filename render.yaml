@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: robinhood-faucet-monitor
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: WALLET_ADDRESS
+        value: 0x5814174290f0481dfeab44ae58757665f7c6f5bf
+      - key: POLL_SECONDS
+        value: "60"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: STATE_FILE
+        value: /tmp/faucet-state.json
+      - key: DISCORD_WEBHOOK_URL
+        sync: false
