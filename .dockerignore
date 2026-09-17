@@ -1,0 +1,5 @@
+.git
+.env
+faucet-state.json
+__pycache__
+test_agent.py
