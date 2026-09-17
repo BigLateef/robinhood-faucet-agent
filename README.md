@@ -41,6 +41,18 @@ anything. Logs are JSON lines, and `faucet-state.json` prevents repeated funded
 alerts while the tap remains on. The wallet is optional; if omitted, the
 monitor only reports faucet funding.
 
+For Render Free, the same simulated alert is available through a protected
+endpoint. Set `TEST_ALERT_TOKEN` in Render, then send:
+
+```bash
+curl -X POST \
+  -H "X-Test-Alert-Token: $TEST_ALERT_TOKEN" \
+  https://robinhood-faucet-monitor.onrender.com/test-discord
+```
+
+The endpoint is POST-only, requires the secret header, and sends no faucet
+request.
+
 ## What counts as funded
 
 The agent requires the faucet's public status to report that it is configured,
@@ -57,7 +69,8 @@ and human check are intentionally left to the normal claim page.
 3. Deploy the `robinhood-faucet-monitor` web service.
 4. Confirm `WALLET_ADDRESS` is the intended public EVM address.
 5. Add your Discord webhook as the `DISCORD_WEBHOOK_URL` environment variable.
-6. Use the service's `/healthz` path for health checks.
+6. Set a long random `TEST_ALERT_TOKEN` environment variable.
+7. Use the service's `/healthz` path for health checks.
 
 When the state changes from dry to funded, the service sends one Discord
 message with the balance, payout, claims remaining, and claim page. It resets
