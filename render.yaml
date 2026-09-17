@@ -17,3 +17,5 @@ services:
         value: /tmp/faucet-state.json
       - key: DISCORD_WEBHOOK_URL
         sync: false
+      - key: TEST_ALERT_TOKEN
+        sync: false
