@@ -11,6 +11,7 @@ import argparse
 import json
 import os
 import re
+import secrets
 import sys
 import time
 from dataclasses import dataclass
@@ -27,6 +28,7 @@ STATUS_ID = "56d84fbd4fb79fe610dfcc3bb503140a8d91839e043aa196bcc467de2e343069"
 POLL_SECONDS = int(os.getenv("POLL_SECONDS", "60"))
 WALLET_ADDRESS = os.getenv("WALLET_ADDRESS", "").strip()
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "").strip()
+TEST_ALERT_TOKEN = os.getenv("TEST_ALERT_TOKEN", "").strip()
 STATE_FILE = Path(os.getenv("STATE_FILE", "faucet-state.json"))
 
 HEADERS = {
@@ -53,6 +55,32 @@ class HealthHandler(BaseHTTPRequestHandler):
             return
         body = json.dumps(LATEST_HEALTH).encode()
         self.send_response(200)
+        self.send_header("content-type", "application/json")
+        self.send_header("content-length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_POST(self) -> None:  # noqa: N802
+        if self.path != "/test-discord":
+            self.send_response(404)
+            self.end_headers()
+            return
+        supplied = self.headers.get("X-Test-Alert-Token", "")
+        if not TEST_ALERT_TOKEN or not secrets.compare_digest(supplied, TEST_ALERT_TOKEN):
+            self.send_response(401)
+            self.end_headers()
+            return
+        try:
+            result = send_test_discord(simulate_funded=True)
+            if result == 0:
+                body = b'{"ok":true,"message":"test Discord alert sent"}'
+                self.send_response(200)
+            else:
+                body = b'{"ok":false,"message":"Discord webhook is not configured"}'
+                self.send_response(503)
+        except Exception:
+            body = b'{"ok":false,"message":"test alert failed"}'
+            self.send_response(502)
         self.send_header("content-type", "application/json")
         self.send_header("content-length", str(len(body)))
         self.end_headers()
